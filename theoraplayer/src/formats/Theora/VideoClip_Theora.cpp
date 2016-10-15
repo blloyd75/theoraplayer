@@ -30,63 +30,6 @@
 
 namespace theoraplayer
 {
-	class TheoraVorbisInfoStructProtect
-	{
-	private:
-		TheoraVorbisInfoStructProtect& operator= (const TheoraVorbisInfoStructProtect& ptr);
-		TheoraVorbisInfoStructProtect(const TheoraVorbisInfoStructProtect& src);
-	public:
-		TheoraVorbisInfoStructProtect& operator= (TheoraVorbisInfoStructProtect& ptr)
-		{
-			delete data;
-			data = ptr.data;
-			ptr.data = NULL;
-			return *this;
-		}
-
-		TheoraVorbisInfoStructProtect& operator= (TheoraVorbisInfoStruct* ptr)
-		{
-			delete data;
-			data = ptr;
-			return *this;
-		}
-		TheoraVorbisInfoStructProtect()
-		{
-			data = NULL;
-		}
-		TheoraVorbisInfoStructProtect(TheoraVorbisInfoStructProtect& src)
-		{
-			data = src.data;
-			src.data = NULL;
-		}
-		TheoraVorbisInfoStructProtect(TheoraVorbisInfoStruct* ptr)
-		{
-			data = ptr;
-		}
-
-		~TheoraVorbisInfoStructProtect()
-		{
-			delete data;
-			data = NULL;
-		}
-		TheoraVorbisInfoStruct* operator->()
-		{
-			return data;
-		}
-		const TheoraVorbisInfoStruct* operator->() const
-		{
-			return data;
-		}
-
-		TheoraVorbisInfoStruct* release()
-		{
-			TheoraVorbisInfoStruct* retval = data;
-			data = NULL;
-			return retval;
-		}
-	private:
-		TheoraVorbisInfoStruct* data;
-	};
 
 	TheoraVorbisInfoStruct::TheoraVorbisInfoStruct()
 	{
@@ -735,7 +678,9 @@ namespace theoraplayer
 
 	void VideoClip_Theora::_readTheoraVorbisHeaders()
 	{
-		std::map<long, TheoraVorbisInfoStructProtect> audioStreams;
+		std::map<long, TheoraVorbisInfoStruct*> audioStreams;
+		TheoraVorbisInfoStruct* vorbinfo=NULL;
+		try {
 		ogg_packet tempOggPacket;
 		//init Vorbis/Theora Layer
 		//Ensure all structures get cleared out.
@@ -755,7 +700,7 @@ namespace theoraplayer
 		char* buffer = NULL;
 		int bytesRead = 0;
 		bool done = false;
-		TheoraVorbisInfoStructProtect vorbinfo = new TheoraVorbisInfoStruct();
+		vorbinfo =new TheoraVorbisInfoStruct();
 		while (!done)
 		{
 			buffer = ogg_sync_buffer(&this->info.OggSyncState, BUFFER_SIZE);
@@ -777,7 +722,7 @@ namespace theoraplayer
 					{
 						ogg_stream_pagein(&this->info.TheoraStreamState, &this->info.OggPage);
 					}
-					std::map<long, TheoraVorbisInfoStructProtect>::iterator itr = audioStreams.find(serialnum);
+					std::map<long, TheoraVorbisInfoStruct*>::iterator itr = audioStreams.find(serialnum);
 					if (itr != audioStreams.end())
 					{
 						ogg_stream_pagein(&itr->second->VorbisStreamState, &this->info.OggPage);
@@ -797,13 +742,15 @@ namespace theoraplayer
 				}
 				else if (decodeAudio && vorbis_synthesis_headerin(&vorbinfo->VorbisInfo, &vorbinfo->VorbisComment, &tempOggPacket) >= 0)
 				{
-					std::map<long, TheoraVorbisInfoStructProtect>::iterator itr = audioStreams.find(serialnum);
+					std::map<long, TheoraVorbisInfoStruct*>::iterator itr = audioStreams.find(serialnum);
 					if (itr == audioStreams.end())
 					{
 						memcpy(&vorbinfo->VorbisStreamState, &oggStateTest, sizeof(oggStateTest));
 						vorbinfo->vorbisHeaders = 1;
 						vorbinfo->streamOrder = audioStreams.size();
-						audioStreams[serialnum] = vorbinfo;
+						audioStreams[serialnum];
+						
+						//= vorbinfo.release();
 					}
 					vorbinfo = new TheoraVorbisInfoStruct();
 				}
@@ -836,8 +783,8 @@ namespace theoraplayer
 				done = false;
 
 			// look 2nd vorbis header packets
-			std::map<long, TheoraVorbisInfoStructProtect>::iterator itr = audioStreams.begin();
-			std::map<long, TheoraVorbisInfoStructProtect>::iterator itr_e = audioStreams.end();
+			std::map<long, TheoraVorbisInfoStruct*>::iterator itr = audioStreams.begin();
+			std::map<long, TheoraVorbisInfoStruct*>::iterator itr_e = audioStreams.end();
 			while (itr != itr_e)
 			{
 				while (itr->second->vorbisHeaders < 3 && (result = ogg_stream_packetout(&itr->second->VorbisStreamState, &tempOggPacket)))
@@ -890,8 +837,8 @@ namespace theoraplayer
 		} // end while looking for all headers
 
 		// Find the best audio source
-		std::map<long, TheoraVorbisInfoStructProtect>::iterator itr = audioStreams.begin();
-		std::map<long, TheoraVorbisInfoStructProtect>::iterator itr_e = audioStreams.end();
+		std::map<long, TheoraVorbisInfoStruct*>::iterator itr = audioStreams.begin();
+		std::map<long, TheoraVorbisInfoStruct*>::iterator itr_e = audioStreams.end();
 		std::string langPref = manager->getAudioLanguagePreference();
 		int matchOrder = -1;
 		AudioLanguageMatch curLangMatch = LANGUAGE_MATCH_NONE;
@@ -906,13 +853,35 @@ namespace theoraplayer
 			if (curLangMatch<chk || (curLangMatch==chk && matchOrder<itr->second->streamOrder))
 			{
 				delete this->info.VorbisData;
-				this->info.VorbisData = itr->second.release();
+				this->info.VorbisData = itr->second;
+				itr->second = NULL;
 				curLangMatch = chk;
 				matchOrder = this->info.VorbisData->streamOrder;
 			}
 			++itr;
 		}
-		//log("Vorbis Headers: " + str(mVorbisHeaders) + " Theora Headers : " + str(mTheoraHeaders));	
+		//log("Vorbis Headers: " + str(mVorbisHeaders) + " Theora Headers : " + str(mTheoraHeaders));
+		} catch (...) {
+			delete vorbinfo;
+			std::map<long, TheoraVorbisInfoStruct*>::iterator itr = audioStreams.begin();
+			std::map<long, TheoraVorbisInfoStruct*>::iterator itr_e = audioStreams.end();
+			while (itr != itr_e)
+			{
+				delete itr->second;
+				itr->second=NULL;
+				++itr;
+			}
+			throw;
+		}
+		delete vorbinfo;
+		std::map<long, TheoraVorbisInfoStruct*>::iterator itr = audioStreams.begin();
+		std::map<long, TheoraVorbisInfoStruct*>::iterator itr_e = audioStreams.end();
+		while (itr != itr_e)
+		{
+			delete itr->second;
+			itr->second=NULL;
+			++itr;
+		}
 	}
 
 
