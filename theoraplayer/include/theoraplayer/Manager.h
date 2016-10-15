@@ -49,6 +49,8 @@ namespace theoraplayer
 
 		inline AudioInterfaceFactory* getAudioInterfaceFactory() { return this->audioInterfaceFactory; }
 		inline void setAudioInterfaceFactory(AudioInterfaceFactory* value) { this->audioInterfaceFactory = value; }
+		inline const std::string& getAudioLanguagePreference() const { return this->audioInterfacePrefLanguage; }
+		inline void setAudioLanguagePreference(const std::string &language) { this->audioInterfacePrefLanguage = language; }
 
 		/// @brief Searches registered clips by name
 		VideoClip* findVideoClipByName(const std::string& name);
@@ -72,7 +74,7 @@ namespace theoraplayer
 		int defaultPrecachedFramesCount;
 		Mutex* workMutex;
 		AudioInterfaceFactory* audioInterfaceFactory;
-
+		std::string            audioInterfacePrefLanguage;
 		void _createWorkerThreads(int count);
 		void _destroyWorkerThreads();
 		void _destroyWorkerThreads(int count);

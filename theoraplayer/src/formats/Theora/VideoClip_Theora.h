@@ -25,23 +25,32 @@
 
 namespace theoraplayer
 {
+	class TheoraVorbisInfoStruct
+	{
+	public:
+		ogg_stream_state VorbisStreamState;
+		//Vorbis State
+		vorbis_info      VorbisInfo;
+		vorbis_dsp_state VorbisDSPState;
+		vorbis_block     VorbisBlock;
+		vorbis_comment   VorbisComment;
+		int              streamOrder;
+		int              vorbisHeaders;
+		TheoraVorbisInfoStruct();
+		~TheoraVorbisInfoStruct();
+	};
 	struct TheoraInfoStruct
 	{
-		// ogg/vorbis/theora variables
+		// ogg/theora variables
 		ogg_sync_state   OggSyncState;
 		ogg_page         OggPage;
-		ogg_stream_state VorbisStreamState;
 		ogg_stream_state TheoraStreamState;
 		//Theora State
 		th_info        TheoraInfo;
 		th_comment     TheoraComment;
 		th_setup_info* TheoraSetup;
 		th_dec_ctx*    TheoraDecoder;
-		//Vorbis State
-		vorbis_info      VorbisInfo;
-		vorbis_dsp_state VorbisDSPState;
-		vorbis_block     VorbisBlock;
-		vorbis_comment   VorbisComment;
+		TheoraVorbisInfoStruct *VorbisData;
 	};
 
 	class VideoClip_Theora : public VideoClip, public AudioPacketQueue
@@ -58,7 +67,6 @@ namespace theoraplayer
 		TheoraInfoStruct info;
 		int theoraStreams;
 		/// @brief Keeps track of Theora and Vorbis Streams.
-		int vorbisStreams;
 		unsigned int readAudioSamples;
 		unsigned long lastDecodedFrameNumber;
 

@@ -59,6 +59,15 @@ namespace theoraplayer
 		FORMAT_XYUV
 	};
 
+	enum AudioLanguageMatch
+	{
+		LANGUAGE_MATCH_NONE=0,
+		LANGUAGE_MATCH_LANG_CODE_NOT_COUNTRY=16,
+		LANGUAGE_MATCH_LANG_CODE=32,
+		LANGUAGE_MATCH_LANG_CODE_EXACT=48,
+		LANGUAGE_MATCH_LANG_AND_COUNTRY=64
+	};
+
 	/// @brief This object contains all data related to video playback, eg. the open source file, the frame queue etc.
 	class theoraplayerExport VideoClip
 	{

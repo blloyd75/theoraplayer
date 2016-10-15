@@ -48,7 +48,7 @@ namespace theoraplayer
 	bool stringEndsWith(const std::string& string, const std::string& suffix);
 	int potCeil(int value);
 	FILE* openSupportedFormatFile(const std::string& filename, VideoClip::Format& outFormat, std::string& outFullFilename);
-
+	AudioLanguageMatch checklanguage(const std::string& desired, const std::string& check);
 }
 
 //typedef std::string hstr;

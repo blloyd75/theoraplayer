@@ -71,4 +71,45 @@ namespace theoraplayer
 		return file;
 	}
 
+	AudioLanguageMatch checklanguage(const std::string& desired, const std::string& check)
+	{
+		// This is a simple function to check language match.
+		// It won't crash from bad inputs, but may return incorrect matches for malformed inputs
+		std::string::size_type p1l = desired.length();
+		std::string::size_type p2l = check.length();
+		bool stringsmatchlength = (p1l == p2l);
+		if (p2l < p1l) p1l = p2l;
+		p2l = 0;
+
+		// 2 Chars for language
+		if (p2l >= p1l) 
+			return LANGUAGE_MATCH_NONE;
+		if (desired[p2l] != check[p2l])
+			return LANGUAGE_MATCH_NONE;
+
+		++p2l;
+		if (p2l >= p1l) 
+			return LANGUAGE_MATCH_NONE;
+		if (desired[p2l] != check[p2l])
+			return LANGUAGE_MATCH_NONE;
+
+		++p2l;
+		// We have a matching language code here
+		if (p2l >= p1l)
+			return stringsmatchlength ? LANGUAGE_MATCH_LANG_CODE_EXACT:LANGUAGE_MATCH_LANG_CODE;
+		if (desired[p2l] != check[p2l] || desired[p2l]!='-')
+			return LANGUAGE_MATCH_LANG_CODE;
+
+		++p2l;
+		if (p2l >= p1l)
+			return LANGUAGE_MATCH_LANG_CODE;
+		if (desired[p2l] != check[p2l])
+			return LANGUAGE_MATCH_LANG_CODE;
+		++p2l;
+		if (p2l >= p1l)
+			return LANGUAGE_MATCH_LANG_CODE;
+		if (desired[p2l] != check[p2l])
+			return LANGUAGE_MATCH_LANG_CODE;
+		return LANGUAGE_MATCH_LANG_AND_COUNTRY;
+	}
 }
