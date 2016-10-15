@@ -748,10 +748,10 @@ namespace theoraplayer
 						memcpy(&vorbinfo->VorbisStreamState, &oggStateTest, sizeof(oggStateTest));
 						vorbinfo->vorbisHeaders = 1;
 						vorbinfo->streamOrder = audioStreams.size();
-						audioStreams[serialnum];
-						
-						//= vorbinfo.release();
+						audioStreams[serialnum] = vorbinfo;
+						vorbinfo = nullptr;
 					}
+					delete vorbinfo;
 					vorbinfo = new TheoraVorbisInfoStruct();
 				}
 				else // Hm, guess it's not a header we support, so erase it
